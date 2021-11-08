@@ -3,7 +3,7 @@
 // const fetch = require("node-fetch");
 import Discord, { MessageEmbed } from 'discord.js';
 import fetch from 'node-fetch';
-import config from 'dotenv'
+import { config } from 'dotenv'
 
 config();
 
@@ -199,7 +199,7 @@ function getCoinStats(coinName) {
     const name = coinName.toLowerCase();
     const coins = stats.wtmRankings.coins;
     const keys = Object.keys(coins);
-    for (key of keys) {
+    for (const key of keys) {
         const keyName = key.toLowerCase();
         const keyTag = coins[key].tag.toLowerCase();
         if (keyName === name || keyTag === name) {
@@ -266,7 +266,7 @@ function reformatTxRecord(txn) {
     const modifiedTxn = { ...txn };
     const removeProperties = [  'isError', 'input', 'contractAddress', 'gas', 'gasPrice', 'input', 'transactionIndex', 
                                             'txreceipt_status', 'gasUsed', 'nonce', 'hash', 'blockHash', 'confirmations'];
-    for (property of removeProperties) {
+    for (const property of removeProperties) {
         delete modifiedTxn[property];
     }
     modifiedTxn.value = "" + parseInt(modifiedTxn.value) * 0.000000000000000001;
@@ -292,7 +292,7 @@ function getAllCoins() {
     let message = '';
     const keys = Object.keys(stats.wtmAllCoins.coins);
     if (keys) {
-        for (key of keys) {
+        for (const key of keys) {
             message += (stats.wtmAllCoins.coins[key].tag + '\n');
         }
     } else {
