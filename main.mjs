@@ -1,6 +1,8 @@
-const Discord = require("discord.js");
-const { MessageEmbed } = require('discord.js');
-const fetch = require("node-fetch");
+// const Discord = require("discord.js");
+// const { MessageEmbed } = require('discord.js');
+// const fetch = require("node-fetch");
+import Discord, { MessageEmbed } from 'discord.js';
+import fetch from 'node-fetch';
 
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]});
 
