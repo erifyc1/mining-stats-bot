@@ -3,6 +3,9 @@
 // const fetch = require("node-fetch");
 import Discord, { MessageEmbed } from 'discord.js';
 import fetch from 'node-fetch';
+import config from 'dotenv'
+
+config();
 
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]});
 
