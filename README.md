@@ -8,4 +8,4 @@
 | --help                       | View all commands help                                 | `--help`                       |
 | --ping                       | Test the bot's status                                  | `--ping`                       |
 | --revenue <megahash>         | View projected Ethereum revenue from provided hashrate | `--revenue 1000`               |
-| --tx <nonce/nonce.<stat>>    | View transaction details from master wallet            | `--tx 0` or --tx 0.value       |
+| --tx <nonce/nonce.<stat>>    | View transaction details from master wallet            | `--tx 0` or `--tx 0.value`     |
