@@ -1,6 +1,7 @@
 # Mining Stats Bot
 ### What is it?
-- A Discord bot that returns general crypto mining statistics
+- A Discord bot that returns general crypto mining statistics.
+- Specially used for monitoring GPU mineable coins and altcoins.
 ---
 ## Usage
 
