@@ -42,29 +42,36 @@ for (const key of addressToAlias.keys()) {
 // 	.setDescription('Some description here')
 // 	.setThumbnail('https://i.imgur.com/AfFp7pu.png')
 // 	.addFields(
-    // 		{ name: 'Regular field title', value: 'Some value here' },
-    // 		{ name: '\u200B', value: '\u200B' },
-    // 		{ name: 'Inline field title', value: 'Some value here', inline: true },
-    // 		{ name: 'Inline field title', value: 'Some value here', inline: true },
-    // 	)
-    // 	.addField('Inline field title', 'Some value here', true)
-    // 	.setImage('https://i.imgur.com/AfFp7pu.png')
-    // 	.setTimestamp()
-    // 	.setFooter('Some footer text here', 'https://i.imgur.com/AfFp7pu.png');
+// 		{ name: 'Regular field title', value: 'Some value here' },
+// 		{ name: '\u200B', value: '\u200B' },
+// 		{ name: 'Inline field title', value: 'Some value here', inline: true },
+// 		{ name: 'Inline field title', value: 'Some value here', inline: true },
+// 	)
+// 	.addField('Inline field title', 'Some value here', true)
+// 	.setImage('https://i.imgur.com/AfFp7pu.png')
+// 	.setTimestamp()
+// 	.setFooter('Some footer text here', 'https://i.imgur.com/AfFp7pu.png');
+
+
+
+let stats;
+async function updateStats() {
+    const   { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins } = await getStats();
+    stats = { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins };
+}
     // ----------------------------------------------
-    let stats;
     
-    client.on("ready", async () => {
+client.on("ready", async () => {
         console.log(`Logged in as ${client.user.tag}`);
         client.user.setActivity('--help' );
-        const   { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins } = await getStats();
-        stats = { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins };
-        const dailyExpected = hiveStats.stats.ETH.meanExpectedReward24H;
-        const ethusd = etherscanStats.result.ethusd;
-        const txList = txRes.result;
-    });
+        updateStats();
+        // const dailyExpected = hiveStats.stats.ETH.meanExpectedReward24H;
+        // const ethusd = etherscanStats.result.ethusd;
+        // const txList = txRes.result;
+        const apiInterval = setInterval(updateStats, (2*1000*3600));
+});
     
-    client.on("messageCreate", async (msg) => {
+client.on("messageCreate", async (msg) => {
         if (!msg.author.bot && msg.content.startsWith('--')) {
             const text = msg.content;
             if (text.startsWith('--coins')) {
@@ -130,8 +137,9 @@ for (const key of addressToAlias.keys()) {
                 const mh = Number(text.split(" ")[1]);
                 if (!Number.isNaN(mh)) {
                     const stat = stats.hiveStats.stats.ETH;
+                    const coins = stats.wtmRankings.coins;
                     delete stat.exchangeRates;
-                    msg.reply('```meanExpectedReward24H | expectedReward24H\n' + stat.meanExpectedReward24H * mh/100 + '   | ' + stat.expectedReward24H * mh/100 + '```');
+                    msg.reply('```Expected 24h ETH Revenue: ' + Math.round(stat.meanExpectedReward24H * mh*100) / 10000 + '\nExpected 24h USD Revenue: $' + Math.round(stat.meanExpectedReward24H * mh * coins['Ethereum'].exchange_rate * stats.btcStats.exchange_rate) / 100 + '```');
                     return;
                 }
             }
