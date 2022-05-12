@@ -55,9 +55,19 @@ for (const key of addressToAlias.keys()) {
 
 
 let stats;
+let curProfit = 0;
 async function updateStats() {
     const   { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins } = await getStats();
     stats = { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins };
+    let profMetric = (await client.channels.fetch('974167845200076820').catch((err) => {
+		console.log('Failed to find channel');
+	}));
+    if (profMetric) {
+        let metric = Math.round(stat.meanExpectedReward24H * 100 * coins['Ethereum'].exchange_rate * stats.btcStats.exchange_rate) / 100;
+        profMetric.setName('Relative Profitability: ' + metric + (curProfit < metric ? ' 📉' : ' 📈')).catch((err) => {
+			console.log('Failed to set profitability metric');
+		});
+    }
 }
     // ----------------------------------------------
     
