@@ -7,7 +7,7 @@
 
 | Command        | Description                                                          | Example Usage                  |
 | -------------- | -------------------------------------------------------------------- | ------------------------------ |
-| --address <member>           | Member crypto address lookup                           | `--address Jacob Stolker`      |
+| --address <member>           | Member crypto address lookup                           | `--address Jacob`              |
 | --coins top/all/count/<name> | View details about various GPU mineable cryptos        | `--coins top` or `--coins all` |
 | --help                       | View all commands help                                 | `--help`                       |
 | --ping                       | Test the bot's status                                  | `--ping`                       |
