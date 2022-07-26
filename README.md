@@ -20,14 +20,16 @@
 ### How to customize for your own use
 
 -   [Required] Fill in the required values in the .env
-    -   ETHERSCAN_KEY=<personal etherscan api key>
-    -   DISCORD_TOKEN=<discord bot authentication token>
-    -   ETH_ADDRESS=<ethereum address to track & load stats from>
+    -   ETHERSCAN_KEY="your etherscan api key"
+    -   DISCORD_TOKEN="your discord bot authentication token"
+    -   ETH_ADDRESS="your ethereum address to track & load stats from"
         -   This would be your address for Hiveon pool (disable hive stats if not desired)
 -   [Required] Change statsChannelId to a channel id that will display the stats
     -   The channel will be renamed regularily with the updated stats
 -   [Optional] Add Ethereum addresses and aliases
-    -   A sample implementation is located in addressDictionary.json
+    -   A sample implementation is located in addressDictionarySample.json
+    -   Copy this file, make necessary edits, and rename to addressDictionary.json
 -   [Optional] Customize the Info Embed
-    -   Alter the embed components in infoEmbed.json
+    -   A sample implementation is located in infoEmbedSample.json
+    -   Copy this file, make necessary edits, and rename to infoEmbed.json
     -   Run --info to show the embed
