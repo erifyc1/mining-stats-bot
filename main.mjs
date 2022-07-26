@@ -11,19 +11,21 @@ const etherscanKey = process.env.ETHERSCAN_KEY;
 const discordAuth = process.env.DISCORD_TOKEN;
 const ethAddress = process.env.ETH_ADDRESS;
 
-// filepaths for specific use-case data access
+// filepaths for specific use-case data access [editable]
 const filePaths = {
     infoEmbed: './infoEmbed.json',
     addressDictionary: './addressDictionary.json'
 };
-// channel to display stats
+// channel to display stats [editable]
 const statsChannelId = '974167845200076820';
 
-// number of hours between stats refreshes
+// number of hours between stats refreshes [editable]
 const updateTime = 1;
-// main object for all stats
+
+// main object for all stats [don't edit]
 let stats;
-// tracker for last known rev $/100mh
+
+// tracker for last known rev $/100mh [don't edit]
 let lastKnownProfit = 0;
 
 // Generates both maps for alias/address conversion
@@ -325,24 +327,29 @@ function getAllCoins() {
 }
 // updates stats from hiveon, etherscan, whattomine
 async function getStats() {
+
+    // fetches worker data from pool
     const hiveStats = await fetch("https://hiveon.net/api/v1/stats/pool/").then((res) => {
         return res.json();
     });
-    
+    // fetches current ethereum price
     const etherscanStats = await fetch("https://api.etherscan.io/api?module=stats&action=ethprice&apikey=" + etherscanKey)
     .then(res => res.json());
-    
+
+    // fetches transaction list for eth address
     const txRes = await fetch("https://api.etherscan.io/api?module=account&action=txlist&address=" + ethAddress +
     "&startblock=12000000&endblock=99999999&page=1&offset=200&sort=asc&apikey=" + etherscanKey)
     .then(res => res.json());
-    
+
+    // fetches the top coins in whattomine
     const wtmRankings = await fetch("https://whattomine.com/coins.json?eth=true&factor%5Beth_hr%5D=91.5&factor%5Beth_p%5D=230.0&e4g=true&factor%5Be4g_hr%5D=91.5&factor%5Be4g_p%5D=230.0&zh=true&factor%5Bzh_hr%5D=134.0&factor%5Bzh_p%5D=250.0&cnh=true&factor%5Bcnh_hr%5D=2400.0&factor%5Bcnh_p%5D=250.0&cng=true&factor%5Bcng_hr%5D=3700.0&factor%5Bcng_p%5D=250.0&cnr=true&factor%5Bcnr_hr%5D=0.0&factor%5Bcnr_p%5D=0.0&cnf=true&factor%5Bcnf_hr%5D=4100.0&factor%5Bcnf_p%5D=250.0&eqa=true&factor%5Beqa_hr%5D=470.0&factor%5Beqa_p%5D=250.0&cc=true&factor%5Bcc_hr%5D=14.2&factor%5Bcc_p%5D=250.0&cr29=true&factor%5Bcr29_hr%5D=14.3&factor%5Bcr29_p%5D=250.0&ct31=true&factor%5Bct31_hr%5D=2.3&factor%5Bct31_p%5D=250.0&ct32=true&factor%5Bct32_hr%5D=0.8&factor%5Bct32_p%5D=250.0&eqb=true&factor%5Beqb_hr%5D=46.5&factor%5Beqb_p%5D=250.0&rmx=true&factor%5Brmx_hr%5D=1500.0&factor%5Brmx_p%5D=250.0&ns=true&factor%5Bns_hr%5D=0.0&factor%5Bns_p%5D=0.0&al=true&factor%5Bal_hr%5D=190.0&factor%5Bal_p%5D=180.0&ops=true&factor%5Bops_hr%5D=77.0&factor%5Bops_p%5D=250.0&eqz=true&factor%5Beqz_hr%5D=63.0&factor%5Beqz_p%5D=250.0&zlh=true&factor%5Bzlh_hr%5D=79.0&factor%5Bzlh_p%5D=250.0&kpw=true&factor%5Bkpw_hr%5D=39.5&factor%5Bkpw_p%5D=250.0&ppw=true&factor%5Bppw_hr%5D=38.9&factor%5Bppw_p%5D=250.0&x25x=true&factor%5Bx25x_hr%5D=11.1&factor%5Bx25x_p%5D=250.0&mtp=true&factor%5Bmtp_hr%5D=5.5&factor%5Bmtp_p%5D=250.0&vh=true&factor%5Bvh_hr%5D=1.45&factor%5Bvh_p%5D=240.0&factor%5Bcost%5D=0.1&sort=Profitability24&volume=0&revenue=24h&factor%5Bexchanges%5D%5B%5D=&factor%5Bexchanges%5D%5B%5D=binance&factor%5Bexchanges%5D%5B%5D=bitfinex&factor%5Bexchanges%5D%5B%5D=bitforex&factor%5Bexchanges%5D%5B%5D=bittrex&factor%5Bexchanges%5D%5B%5D=dove&factor%5Bexchanges%5D%5B%5D=exmo&factor%5Bexchanges%5D%5B%5D=gate&factor%5Bexchanges%5D%5B%5D=graviex&factor%5Bexchanges%5D%5B%5D=hitbtc&factor%5Bexchanges%5D%5B%5D=hotbit&factor%5Bexchanges%5D%5B%5D=ogre&factor%5Bexchanges%5D%5B%5D=poloniex&factor%5Bexchanges%5D%5B%5D=stex&dataset=")
     .then(res => res.json());
-    
-    
+
+    // fetches the current BTC price (to convert from coin -> BTC -> USD)
     const btcStats = await fetch("https://whattomine.com/coins/1.json?hr=70000.0&p=2800.0&fee=0.0&cost=0.1&hcost=0.0&span_br=1h&span_d=")
     .then(res => res.json());
     
+    // fetches all mineable coins
     const wtmAllCoins = await fetch("https://whattomine.com/calculators.json/")
     .then(res => res.json());
     
