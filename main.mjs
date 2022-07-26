@@ -1,6 +1,7 @@
 import Discord, { MessageEmbed } from 'discord.js';
 import fetch from 'node-fetch';
-import { config } from 'dotenv'
+import { config } from 'dotenv';
+import fs from 'fs';
 
 config();
 
@@ -10,25 +11,13 @@ const etherscanKey = process.env.ETHERSCAN_KEY;
 const discordAuth = process.env.DISCORD_TOKEN;
 const ethAddress = process.env.ETH_ADDRESS;
 
-const addressToAlias = new Map();
-addressToAlias.set('0x264fa059F9c02eE53a8B493315899BD3B934c84E'.toLowerCase(), 'Jasar Ali');
-addressToAlias.set('0x0bAd8c5e188B44636e81813C9d0c744a43FC3098'.toLowerCase(), 'Sam Garza');
-addressToAlias.set('0xF21a6097Fdb54D010fE554daBE0A30692b32d509'.toLowerCase(), 'Matthew Levy');
-addressToAlias.set('0x0EB1870072Ef71ba56edA95C0a2C478F6e53DBE6'.toLowerCase(), 'Louis Li');
-addressToAlias.set('0xd2d00EB4864BDFA1f753abbFBdf6D4cfb77c32fB'.toLowerCase(), 'Jake Page');
-addressToAlias.set('0x9aB6a2e276C15C6535CaA855C33aE0c1aBfed33D'.toLowerCase(), 'Jacob Stolker');
-addressToAlias.set('0x879C0d3529c135d7794892C356FeB7346f621EF0'.toLowerCase(), 'Jason Xu');
-addressToAlias.set('0xCe09D2Be2852CecB978B76E4a7F0DD3ad5B8b626'.toLowerCase(), 'BC-LLC');
-addressToAlias.set('0x90Be6Cd7992358426eF162CC1792d7aa4175243E'.toLowerCase(), 'BC Operating Fund');
-addressToAlias.set('0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'.toLowerCase(), 'Ethermine');
-addressToAlias.set('0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836'.toLowerCase(), 'Hiveon');
-addressToAlias.set('0x8595dd9e0438640b5e1254f9df579ac12a86865f'.toLowerCase(), 'Ezil.me');
-const aliasToAddress = new Map();
-for (const key of addressToAlias.keys()) {
-    const value = addressToAlias.get(key);
-    aliasToAddress.set(value, key);
-}
-
+// filepaths for specific use-case data access
+const filePaths = {
+    infoEmbed: './infoEmbed.json',
+    addressDictionary: './addressDictionary.json'
+};
+// channel to display stats
+const statsChannelId = '974167845200076820';
 
 // number of hours between stats refreshes
 const updateTime = 1;
@@ -37,11 +26,24 @@ let stats;
 // tracker for last known rev $/100mh
 let lastKnownProfit = 0;
 
+// Generates both maps for alias/address conversion
+const addressToAlias = new Map();
+const dict = JSON.parse(fs.readFileSync(filePaths.addressDictionary).toString());
+if (!dict) throw err;
+for (const [key, value] of Object.entries(dict)) {
+    addressToAlias.set(key.toLowerCase(), value);
+}
+const aliasToAddress = new Map();
+for (const key of addressToAlias.keys()) {
+    const value = addressToAlias.get(key);
+    aliasToAddress.set(value, key);
+}
 
+// stats updater
 async function updateStats() {
     const   { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins } = await getStats();
     stats = { hiveStats, etherscanStats, txRes, wtmRankings, btcStats, wtmAllCoins };
-    let profMetric = (await client.channels.fetch('974167845200076820').catch((err) => {
+    let profMetric = (await client.channels.fetch(statsChannelId).catch((err) => {
         console.log('Failed to find channel');
 	}));
     const ethStat = stats.hiveStats.stats.ETH;
@@ -58,6 +60,7 @@ async function updateStats() {
     }
 }
 
+// initial setup on bot start
 client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}`);
     client.user.setActivity('--help' );
@@ -66,8 +69,9 @@ client.on("ready", async () => {
     // const dailyExpected = hiveStats.stats.ETH.meanExpectedReward24H;
     // const ethusd = etherscanStats.result.ethusd;
     // const txList = txRes.result;
-    });
-    
+});
+
+// message detection
 client.on("messageCreate", async (msg) => {
     if (!msg.author.bot && msg.content.startsWith('--')) {
         const text = msg.content;
@@ -87,7 +91,7 @@ client.on("messageCreate", async (msg) => {
         } else if (text.startsWith('--ping')) {
             msg.reply('pong');
         } else if (text.startsWith('--info')) {
-            msg.channel.send({embeds: [await getInfoEmbed()]});
+            msg.channel.send({embeds: [getInfoEmbed()]});
         } else if (text.startsWith('--help') || text === '--') {
             msg.reply({ embeds: [getHelpPage()] });
         } else if (text.startsWith('--tx')) {
@@ -151,37 +155,25 @@ client.on("messageCreate", async (msg) => {
                 }
             }
             msg.reply('```Proper Usage of --revenue\n--revenue <mh>```');
-            // stat.expectedReward24H = stat.expectedReward24H + '';
-            // stat.miners = stat.miners + '';
-            // stat.threshold = stat.threshold + '';
-            // stat.workers = stat.workers + '';
-            // console.log(stat);
-            // msg.reply(stat);
         }
     }
 });
 
-async function getInfoEmbed() {
-    const embed = new MessageEmbed()
-    .setColor('#ffffff')
-    .setTitle('Based Capital Info')
-    .setDescription('\u2800\n**ETH Address & Ownership Proportions:**\n**Jasar Ali** - 0.2809 - 0x264fa059F9c02eE53a8B493315899BD3B934c84E\n**Samuel Garza** - 0.0170 - 0x0bAd8c5e188B44636e81813C9d0c744a43FC3098\n**Matthew Levy** - 0.4300 - 0xF21a6097Fdb54D010fE554daBE0A30692b32d509\n**Louis Li** - 0.1092 - 0x08a033d23eb433d0a68722dd859a090655885232\n**Jake Page** - 0.0136 - 0xd2d00EB4864BDFA1f753abbFBdf6D4cfb77c32fB\n**Jacob Stolker** - 0.1323 - 0x9aB6a2e276C15C6535CaA855C33aE0c1aBfed33D\n**Jason Xu** - 0.0170 - 0x879C0d3529c135d7794892C356FeB7346f621EF0\n\n**Associates**\n*Graham Fredman* - 0x85Cb4d30cd862Ed93CC6bDbd76E8DDff1F545205')
-    .addFields(
-        { name: '\u2800\n__Important Documents__\n\nArticles of Organization', value: `https://drive.google.com/file/d/1bcH62PMNUlHbbeoK1B5JBekcZXyVxdpq/view?usp=sharing`, inline: false },
-        { name: 'EIN Assignment', value: `https://drive.google.com/file/d/1T658kLDMGqYQfRz4a8TITESrNMB9eBJn/view?usp=sharing`, inline: false },
-        { name: 'Operating Agreement Signed', value: `https://drive.google.com/file/d/1o1ZKCjeWgDCmMRt1m6sSQoKsisZwQMtH/view?usp=sharing`, inline: false },
-        { name: '1065 Tax Form April 2022', value: `https://drive.google.com/file/d/1VibNcu4tHvNPfeE9ZyOUdTzl5Gk52Kex/view?usp=sharing`, inline: false },
-        { name: 'Ledger Master Document', value: `https://docs.google.com/spreadsheets/d/1Ozl3YbSM7jJVTLrlWQy4M5BF0PUT20bByCh-xydSYQg/edit?usp=sharing`, inline: false },
-        { name: '\u2800\n__Useful Links__\n\nGPU Tier List July 2021', value: `https://docs.google.com/spreadsheets/d/11vD6v93JACIuAZktnw3T03KtMgC19oGik88wRLxnsfA/edit?usp=sharing`, inline: false },
-        { name: 'View the mining in real time', value: `https://hiveon.net/eth?miner=0xCe09D2Be2852CecB978B76E4a7F0DD3ad5B8b626`, inline: false },
-        { name: 'Trace our Wallet\'s transactions', value: `https://etherscan.io/txs?a=0xCe09D2Be2852CecB978B76E4a7F0DD3ad5B8b626`, inline: false },
-        { name: 'Our Website', value: `https://www.based-capital.com`, inline: false },
-        )
-        .setTimestamp()
-        .setFooter(client.user.tag, 'https://imgur.com/6WII2qM.png');
-        return embed;
+// gets custom info embed specified in filePaths.infoEmbed
+function getInfoEmbed() {
+    const embedData = JSON.parse(fs.readFileSync(filePaths.infoEmbed).toString());
+    if (!embedData) {
+        return new MessageEmbed({
+            title: 'error',
+            description: 'failed to read file'
+        });
+    }
+    const embed = new MessageEmbed(embedData);
+    if (embed.timestamp) embed.setTimestamp();
+    return embed;
 }
 
+// gets command help page (outdated)
 function getHelpPage() {
     const embed = new MessageEmbed()
     .setColor('#0099ff')
@@ -190,37 +182,38 @@ function getHelpPage() {
     .setThumbnail('https://imgur.com/6WII2qM.png')
     .addFields(
         { name: 'Command', value: '--address\n--coins\n--help\n--ping\n--revenue\n--tx', inline: true },
-        { name: 'Description', value: 'BC member crypto address lookup\nview details about various cryptos\nview all commands\ntest the bot\nview projected revenue from hashrate\nview transaction details', inline: true },
+        { name: 'Description', value: 'Member crypto address lookup\nview details about various cryptos\nview all commands\ntest the bot\nview projected revenue from hashrate\nview transaction details', inline: true },
         )
         .setTimestamp()
         .setFooter(client.user.tag, 'https://imgur.com/6WII2qM.png');
         return embed;
-    }
-
-function getAddressPage() {
-let names = '';
-let addresses = '';
-for (const key of aliasToAddress.keys()) {
-    names += key + '\n';
-    addresses += aliasToAddress.get(key) + '\n';
 }
-const embed = new MessageEmbed()
-.setColor('#0099ff')
-.setTitle('Address Page')
-.setAuthor(client.user.tag.split('#')[0], 'https://imgur.com/6WII2qM.png', '')
-.addFields(
-    { name: 'Name', value: `${names}`, inline: true },
-    { name: 'Address', value: `${addresses}`, inline: true },
+
+// gets addresses dictionary as embed
+function getAddressPage() {
+    let names = '';
+    let addresses = '';
+    for (const key of aliasToAddress.keys()) {
+        names += key + '\n';
+        addresses += aliasToAddress.get(key) + '\n';
+    }
+    const embed = new MessageEmbed()
+    .setColor('#0099ff')
+    .setTitle('Address Page')
+    .setAuthor(client.user.tag.split('#')[0], 'https://imgur.com/6WII2qM.png', '')
+    .addFields(
+        { name: 'Name', value: `${names}`, inline: true },
+        { name: 'Address', value: `${addresses}`, inline: true },
     )
     .setTimestamp()
     .setFooter(client.user.tag, 'https://imgur.com/6WII2qM.png');
     return embed;
 }
-
+// capitalize first letter of str
 function capitalize(str) {
     return str.toLowerCase().split(' ').map((substr) => substr.slice(0, 1).toUpperCase() + substr.slice(1)).join(' ');
 }
-
+// converts address to alias
 function convertAlias(str) {
     if (str.startsWith('0x')) {
         return addressToAlias.has(str) ? addressToAlias.get(str) : str;
@@ -228,7 +221,7 @@ function convertAlias(str) {
         return aliasToAddress.has(str) ? aliasToAddress.get(str) : str;
     }
 }
-
+// gets mining stats on coin
 function getCoinStats(coinName) {
     if (!stats || !stats.wtmRankings) {
         console.log('Failed to get stats.wtmRankings')
@@ -246,7 +239,7 @@ function getCoinStats(coinName) {
     }
     return 'No coin found with name \"' + coinName + '\"';
 }
-
+// displays embed of most profitable gpu minable coins (excludes nicehash)
 function getTopCoins() {
     if (!stats || !stats.wtmRankings) {
         console.log('Failed to get stats.wtmRankings')
@@ -255,18 +248,6 @@ function getTopCoins() {
     let message = "```# | Name | Tag | Rev/24h | Rev/USD\n";
     const coins = stats.wtmRankings.coins;
     const keys = Object.keys(coins);
-    // let idx = 0;
-    // if (keys.length >= 10) {
-        //     for (let i = 1; i <= 10; i++) {
-            //         message += '**' + i + ": **" + (keys[idx].startsWith('Nicehash') ? keys[++idx] : keys[idx])
-            //         + ' | (' + coins[keys[idx]].tag + ') | ' + coins[keys[idx]].estimated_rewards24 + ' | '
-            //         + Math.round(coins[keys[idx]].btc_revenue24 * stats.btcStats.exchange_rate * 100) / 100 + "\n";
-            //         idx++;
-            //     }
-            //     message += '```';
-            // } else {
-                //     message = 'Fetch Error';
-                // }
     let nums = '', names = '', tags = '', rev24 = '', revUSD = '';
     
     let idx = 0;
@@ -301,9 +282,9 @@ function getTopCoins() {
         .setTimestamp()
         .setFooter(client.user.tag, 'https://imgur.com/6WII2qM.png');
         return embed;
-        //return message;
 }
 
+// modifies infoming json of txn record to a better format
 function reformatTxRecord(txn) {
     const modifiedTxn = { ...txn };
     const removeProperties = [  'isError', 'input', 'contractAddress', 'gas', 'gasPrice', 'input', 'transactionIndex', 
@@ -318,7 +299,7 @@ function reformatTxRecord(txn) {
     modifiedTxn.from = convertAlias(modifiedTxn.from);
     return modifiedTxn;
 }
-
+// handles nesting props in --tx command
 function resolveNestedProp(obj, prop) {
     const props = prop.split('.');
     const thisProp = props.shift();
@@ -329,7 +310,7 @@ function resolveNestedProp(obj, prop) {
         return thisProp in obj ? resolveNestedProp(obj[thisProp], props.join('.')) : null;
     }
 }
-
+// gets a list of all gpu minable coins tracked on whattomine.com
 function getAllCoins() {
     let message = '';
     const keys = Object.keys(stats.wtmAllCoins.coins);
@@ -342,7 +323,7 @@ function getAllCoins() {
     }
     return message;
 }
-
+// updates stats from hiveon, etherscan, whattomine
 async function getStats() {
     const hiveStats = await fetch("https://hiveon.net/api/v1/stats/pool/").then((res) => {
         return res.json();
@@ -370,22 +351,3 @@ async function getStats() {
 }
 
 client.login(discordAuth);
-
-// -------------------------------------------
-// const exampleEmbed = new MessageEmbed()
-// 	.setColor('#0099ff')
-// 	.setTitle('Some title')
-// 	.setURL('https://discord.js.org/')
-// 	.setAuthor('Some name', 'https://imgur.com/6WII2qM', 'https://discord.js.org')
-// 	.setDescription('Some description here')
-// 	.setThumbnail('https://i.imgur.com/AfFp7pu.png')
-// 	.addFields(
-// 		{ name: 'Regular field title', value: 'Some value here' },
-// 		{ name: '\u200B', value: '\u200B' },
-// 		{ name: 'Inline field title', value: 'Some value here', inline: true },
-// 		{ name: 'Inline field title', value: 'Some value here', inline: true },
-// 	)
-// 	.addField('Inline field title', 'Some value here', true)
-// 	.setImage('https://i.imgur.com/AfFp7pu.png')
-// 	.setTimestamp()
-// 	.setFooter('Some footer text here', 'https://i.imgur.com/AfFp7pu.png');
