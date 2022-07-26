@@ -6,7 +6,6 @@ import fs from 'fs';
 config();
 
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]});
-
 const etherscanKey = process.env.ETHERSCAN_KEY;
 const discordAuth = process.env.DISCORD_TOKEN;
 const ethAddress = process.env.ETH_ADDRESS;

@@ -5,7 +5,7 @@
     "fields": [
         { "name": "link1", "value": "https://google.com", "inline": false },
         { "name": "link2", "value": "https://apple.com", "inline": false },
-        { "name": "spreadsheet", "value": "https://drive.google.com", "inline": false },
+        { "name": "spreadsheet", "value": "https://drive.google.com", "inline": false }
     ],
     "timestamp": true,
     "footer": {
