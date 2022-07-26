@@ -1,0 +1,5 @@
+node_modules/
+.env
+# personalize for use case
+infoEmbed.json
+addressDictionary.json
