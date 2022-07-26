@@ -27,7 +27,9 @@
 -   [Required] Change statsChannelId to a channel id that will display the stats
     -   The channel will be renamed regularily with the updated stats
 -   [Optional] Add Ethereum addresses and aliases
-    -   A sample implementation is located in addressDictionary.json
+    -   A sample implementation is located in addressDictionarySample.json
+    -   Copy this file, make necessary edits, and rename to addressDictionary.json
 -   [Optional] Customize the Info Embed
-    -   Alter the embed components in infoEmbed.json
+    -   A sample implementation is located in infoEmbedSample.json
+    -   Copy this file, make necessary edits, and rename to infoEmbed.json
     -   Run --info to show the embed
