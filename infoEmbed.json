@@ -1,0 +1,15 @@
+{
+    "color": "0x111111",
+    "title": "Info",
+    "description": "custom info panel",
+    "fields": [
+        { "name": "link1", "value": "https://google.com", "inline": false },
+        { "name": "link2", "value": "https://apple.com", "inline": false },
+        { "name": "spreadsheet", "value": "https://drive.google.com", "inline": false },
+    ],
+    "timestamp": true,
+    "footer": {
+        "text": "Last Updated", 
+        "iconURL": "image URL"
+    }
+}
